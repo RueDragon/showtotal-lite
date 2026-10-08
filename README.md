@@ -6,7 +6,7 @@ Windows API 用量浮窗，只保留 **用量、日志、榜单**。不包含基
 
 其他收费 API 网站可通过 fork `adapter.js` 自行适配。当前版本不承诺跨平台统计接口兼容，详细契约见下表。
 
-## 给别人的电脑使用
+## 使用
 
 1. 从 GitHub Releases 下载 `showTotal-Lite-1.0.0-Windows-x64.exe`，无需安装 Node.js。
 2. 把 `.env.example` 放在 exe 同目录，复制并重命名为 `.env`。
@@ -26,8 +26,14 @@ SHOWTOTAL_ORG_PATH="your-team-path"
 ## 功能
 
 - 用量：今日花费、请求数、分档剩余额度、Token 和缓存命中率，每分钟更新。
+- <img width="297" height="310" alt="image" src="https://github.com/user-attachments/assets/e5e0a9dc-58cd-4c02-ae95-b6f8a9912153" />
+
 - 日志：最近 100 条，模型、时间、实际花费、输入输出 Token；三项单价乘以 `standard_discount.min_vendor_discount_rate`。费率不含阶梯或时段优惠，实际花费直接取服务端账单。
+- <img width="286" height="307" alt="image" src="https://github.com/user-attachments/assets/73d59177-6832-4811-9651-e96ecc2c7fd5" />
+
 - 榜单：北京时间昨日团队用量，每页 10 人，费用或请求排序、加载更多。
+- <img width="300" height="313" alt="image" src="https://github.com/user-attachments/assets/73dcc35f-5bbf-44e2-ad9b-144d09ee7168" />
+
 - 置顶开关、刷新、设置、应用专用图标。
 
 ## 接口约定
