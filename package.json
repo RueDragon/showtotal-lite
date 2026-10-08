@@ -1,0 +1,42 @@
+{
+  "name": "showtotal-lite",
+  "version": "1.0.0",
+  "description": "API usage, logs and team ranking widget",
+  "main": "main.js",
+  "author": "RueDragon",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js",
+    "dist": "electron-builder --win portable --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "io.github.ruedragon.showtotal.lite",
+    "productName": "showTotal Lite",
+    "files": [
+      "main.js",
+      "preload.js",
+      "core.js",
+      "adapter.js",
+      "env.js",
+      "index.html",
+      "renderer.js",
+      "style.css",
+      "assets/*",
+      "package.json",
+      "!.env",
+      "!.env.*"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "assets/showtotal.ico"
+    },
+    "portable": {
+      "artifactName": "showTotal-Lite-${version}-Windows-x64.exe"
+    }
+  }
+}
