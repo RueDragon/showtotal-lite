@@ -25,7 +25,7 @@ SHOWTOTAL_ORG_PATH="your-team-path"
 
 ## 功能
 
-- 用量：今日花费、请求数、分档剩余额度、Token 和缓存命中率，每分钟更新。
+- 用量：今日花费、请求数、分档剩余额度、Token 和缓存命中率。自动刷新当前页，默认 5 分钟，可选 5/10/15 分钟；请求最长 20 秒，刷新中禁用按钮。总剩余额度低于 20% 时每天最多提醒一次，悬停额度可看近期消耗速度。
 - <img width="297" height="310" alt="image" src="https://github.com/user-attachments/assets/e5e0a9dc-58cd-4c02-ae95-b6f8a9912153" />
 
 - 日志：最近 100 条，模型、时间、实际花费、输入输出 Token；三项单价乘以 `standard_discount.min_vendor_discount_rate`。费率不含阶梯或时段优惠，实际花费直接取服务端账单。
@@ -34,7 +34,9 @@ SHOWTOTAL_ORG_PATH="your-team-path"
 - 榜单：北京时间昨日团队用量，每页 10 人，费用或请求排序、加载更多。
 - <img width="300" height="313" alt="image" src="https://github.com/user-attachments/assets/73dcc35f-5bbf-44e2-ad9b-144d09ee7168" />
 
-- 置顶开关、刷新、设置、应用专用图标。
+- 日志增加紧凑的最近/高费用/慢首词排序，悬停条数查看已加载日志合计，非全天统计。首词耗时缺失的日志不参与慢首词排序。
+- 置顶开关、窗口位置记忆、刷新、设置、应用专用图标。关闭隐藏到托盘，双击托盘恢复；右键托盘可退出或选择开机启动（默认不开启）。
+- 刷新偏好、置顶状态和窗口位置存储在本机 Electron userData；账户配置仍按上述规则保存在 .env。公共计算模块为 usage-core.js，不包含投资或个人账号池扩展。
 
 ## 接口约定
 

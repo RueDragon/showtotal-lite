@@ -2,6 +2,13 @@ const $ = id => document.getElementById(id)
 let page = 'usage', configured = false, pinned = true, busy = false, generation = 0
 let rankPage = 0, rankTotal = null, rankCount = 0, rankSort = 'amount'
 let prices = new Map()
+let loadedLogs = [], usageSample = null, refreshTimer
+function scheduleRefresh(value) {
+  clearInterval(refreshTimer)
+  const minutes = usageCore.refreshMinutes(value)
+  $('refresh-minutes').value = String(minutes)
+  refreshTimer = setInterval(() => refresh(), minutes * 60000)
+}
 const number = value => value == null || !Number.isFinite(Number(value)) ? null : Number(value)
 const money = value => number(value) == null ? '--' : '¥' + Number(value).toFixed(2)
 const compact = value => number(value) == null ? '--' : Intl.NumberFormat('en',{notation:'compact',maximumFractionDigits:1}).format(Number(value))
@@ -30,6 +37,15 @@ function renderUsage(payload) {
     track.append(fill);row.append(label,track);$('quotas').append(row)
   }
   if (!categories.length) $('quotas').append(node('div','section-note','今日余额 '+money(data.daily_remaining_yuan)))
+  const valid = categories.filter(c => number(c.daily_limit_yuan)>0 && number(c.daily_remaining_yuan)!=null)
+  const limit = valid.reduce((sum,c)=>sum+Number(c.daily_limit_yuan),0)
+  const remaining = valid.length ? valid.reduce((sum,c)=>sum+Number(c.daily_remaining_yuan),0) : number(data.daily_remaining_yuan)
+  const cost = number(data.quota_cost)
+  if(cost!=null && remaining!=null) {
+    const sample={day:usageCore.day(),at:Date.now(),cost,remaining},trend=usageCore.trend(usageSample,sample);usageSample=sample
+    $('quotas').title=trend?'近期消耗 '+money(trend.perHour)+'/小时'+(trend.hoursLeft!=null?'；按此速度约可用 '+trend.hoursLeft.toFixed(1)+' 小时，仅供参考':''):'两次成功刷新后显示近期消耗速度'
+  }
+  if(limit>0 && remaining/limit<0.2) window.widget.quotaWarning().catch(()=>{})
   const cached=number(data.total_cache_tokens),input=number(data.total_input_tokens)
   const rate=cached!=null && input!=null && cached+input>0 ? (cached/(cached+input)*100).toFixed(1)+'%' : '--'
   $('tokens').replaceChildren()
@@ -43,7 +59,10 @@ function logItems(payload) {
   return []
 }
 function renderLogs(payload) {
-  const logs=logItems(payload)
+  loadedLogs=logItems(payload)
+  const logs=usageCore.selectLogs(loadedLogs,$('log-mode').value)
+  $('log-summary').textContent=loadedLogs.length+'条'
+  $('log-summary').title='仅统计已加载日志，非全天：合计 '+money(loadedLogs.reduce((sum,log)=>sum+(number(log.quota_cost)||0),0))
   if (!logs.length) return empty('log-list','暂无日志')
   $('log-list').replaceChildren()
   for (const log of logs) {
@@ -60,6 +79,7 @@ function renderLogs(payload) {
       const item=node('span','',label+' ');item.append(node('strong','',value));stats.append(item)
     }
     row.append(title,price,stats);$('log-list').append(row)
+    const seconds=usageCore.firstTokenSeconds(log);if(seconds!=null)row.title='首词耗时 '+seconds.toFixed(2)+' 秒'
   }
 }
 function renderRank(data,reset) {
@@ -100,6 +120,11 @@ async function refresh(more=false) {
 document.querySelectorAll('nav [data-page]').forEach(button=>button.addEventListener('click',()=>{page=configured?button.dataset.page:'setup';generation++;showPage();refresh()}))
 $('settings').addEventListener('click',()=>{page='setup';generation++;showPage()})
 $('refresh').addEventListener('click',()=>refresh())
+$('log-mode').addEventListener('change',()=>renderLogs(loadedLogs))
+$('refresh-minutes').addEventListener('change',async()=>{
+  const result=await window.widget.refreshMinutes($('refresh-minutes').value)
+  if(result.ok)scheduleRefresh(result.data);else $('status').textContent=result.error
+})
 $('rank-more').addEventListener('click',()=>refresh(true))
 for(const [id,sort] of [['sort-cost','amount'],['sort-requests','requests']]) $(id).addEventListener('click',()=>{rankSort=sort;generation++;refresh()})
 $('pin').addEventListener('click',async()=>{pinned=!pinned;await window.widget.pin(pinned);$('pin').textContent=pinned?'置顶':'不置顶'})
@@ -109,6 +134,7 @@ $('config-form').addEventListener('submit',async event=>{
   const result=await window.widget.save({baseUrl:$('base-url').value,token:$('api-key').value,orgPath:$('org-path').value})
   if(!result.ok) {$('status').textContent=result.error;return}
   $('api-key').value='';configured=true;prices.clear();page='usage';generation++;showPage();refresh()
+  usageSample=null;loadedLogs=[]
 })
 $('forget').addEventListener('click',async()=>{
   const result=await window.widget.clear();if(!result.ok){$('status').textContent=result.error;return}
@@ -116,6 +142,6 @@ $('forget').addEventListener('click',async()=>{
 })
 window.widget.settings().then(result=>{
   if(!result.ok){$('status').textContent=result.error;return}
+  pinned=Boolean(result.data.pinned);$('pin').textContent=pinned?'置顶':'不置顶';scheduleRefresh(result.data.refreshMinutes)
   configured=result.data.configured;$('base-url').value=result.data.baseUrl;$('org-path').value=result.data.orgPath;page=configured?'usage':'setup';showPage();refresh()
 })
-setInterval(()=>{if(page==='usage') refresh()},60000)

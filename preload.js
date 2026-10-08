@@ -5,5 +5,7 @@ contextBridge.exposeInMainWorld('widget', {
   clear:() => ipcRenderer.invoke('settings:clear'),
   data:(type,options) => ipcRenderer.invoke('data:get',type,options),
   pin:value => ipcRenderer.invoke('window:pin',value),
+  refreshMinutes:value => ipcRenderer.invoke('preferences:refresh',value),
+  quotaWarning:() => ipcRenderer.invoke('usage:warning'),
   close:() => ipcRenderer.invoke('window:close')
 })
